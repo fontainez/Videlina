@@ -2,9 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function Header() {
   const pathname = usePathname();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -43,6 +71,32 @@ export default function Header() {
               </Link>
             ))}
           </nav>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center space-x-4">
+            {loading ? (
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            ) : user ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-600 hidden sm:block">
+                  Welcome, {user.email?.split("@")[0]}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm"
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">

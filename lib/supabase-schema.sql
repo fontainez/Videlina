@@ -5,7 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Categories table
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
@@ -15,7 +15,7 @@ CREATE TABLE categories (
 );
 
 -- Books table
-CREATE TABLE books (
+CREATE TABLE IF NOT EXISTS books (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL DEFAULT 'Omraam Mikhaël Aïvanhov',
@@ -28,14 +28,14 @@ CREATE TABLE books (
     language VARCHAR(50) DEFAULT 'English',
     is_featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 
     -- Add foreign key constraint if categories table exists
     -- FOREIGN KEY (category) REFERENCES categories(name) ON DELETE SET NULL
 );
 
 -- Quotes table
-CREATE TABLE quotes (
+CREATE TABLE IF NOT EXISTS quotes (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     text TEXT NOT NULL,
     source VARCHAR(255) DEFAULT 'Omraam Mikhaël Aïvanhov',
@@ -47,7 +47,7 @@ CREATE TABLE quotes (
 );
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
     id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
@@ -57,7 +57,7 @@ CREATE TABLE profiles (
 );
 
 -- Reading progress table
-CREATE TABLE reading_progress (
+CREATE TABLE IF NOT EXISTS reading_progress (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL,
     book_id UUID NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE reading_progress (
 );
 
 -- Bookmarks table
-CREATE TABLE bookmarks (
+CREATE TABLE IF NOT EXISTS bookmarks (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL,
     book_id UUID NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE bookmarks (
 );
 
 -- Contact submissions table
-CREATE TABLE contact_submissions (
+CREATE TABLE IF NOT EXISTS contact_submissions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
@@ -107,7 +107,8 @@ INSERT INTO categories (name, description, color) VALUES
     ('Symbolism', 'Interpretation of spiritual symbols', '#FF6F00'),
     ('Kabbalah', 'Mystical teachings and Tree of Life', '#6A1B9A'),
     ('Meditation', 'Techniques for inner peace and connection', '#00838F'),
-    ('Nature', 'Spiritual significance of natural world', '#388E3C');
+    ('Nature', 'Spiritual significance of natural world', '#388E3C')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert sample books
 INSERT INTO books (title, author, description, category, year, pages, is_featured) VALUES
@@ -164,7 +165,8 @@ INSERT INTO books (title, author, description, category, year, pages, is_feature
         1984,
         190,
         FALSE
-    );
+    )
+ON CONFLICT (title, author) DO NOTHING;
 
 -- Insert sample quotes
 INSERT INTO quotes (text, source, is_daily) VALUES
@@ -192,20 +194,22 @@ INSERT INTO quotes (text, source, is_daily) VALUES
         'The mind is the gardener who cultivates the garden of the soul.',
         'Omraam Mikhaël Aïvanhov',
         FALSE
-    );
+    )
+ON CONFLICT (text) DO NOTHING;
 
 -- Create indexes for better performance
-CREATE INDEX idx_books_category ON books(category);
-CREATE INDEX idx_books_featured ON books(is_featured);
-CREATE INDEX idx_books_created ON books(created_at);
-CREATE INDEX idx_quotes_daily ON quotes(is_daily);
-CREATE INDEX idx_reading_progress_user ON reading_progress(user_id);
-CREATE INDEX idx_bookmarks_user ON bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_books_category ON books(category);
+CREATE INDEX IF NOT EXISTS idx_books_featured ON books(is_featured);
+CREATE INDEX IF NOT EXISTS idx_books_created ON books(created_at);
+CREATE INDEX IF NOT EXISTS idx_quotes_daily ON quotes(is_daily);
+CREATE INDEX IF NOT EXISTS idx_reading_progress_user ON reading_progress(user_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
 
 -- Storage setup for file uploads
 INSERT INTO storage.buckets (id, name, public) VALUES
   ('book-covers', 'book-covers', true),
-  ('pdfs', 'pdfs', true);
+  ('pdfs', 'pdfs', true)
+ON CONFLICT (id) DO NOTHING;
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE books ENABLE ROW LEVEL SECURITY;
@@ -219,54 +223,54 @@ ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
 -- RLS Policies
 
 -- Books: Public read access, authenticated users can manage
-CREATE POLICY "Books are viewable by everyone" ON books
+CREATE POLICY IF NOT EXISTS "Books are viewable by everyone" ON books
     FOR SELECT USING (true);
 
-CREATE POLICY "Authenticated users can manage books" ON books
+CREATE POLICY IF NOT EXISTS "Authenticated users can manage books" ON books
     FOR ALL USING (auth.role() = 'authenticated');
 
 -- Categories: Public read access
-CREATE POLICY "Categories are viewable by everyone" ON categories
+CREATE POLICY IF NOT EXISTS "Categories are viewable by everyone" ON categories
     FOR SELECT USING (true);
 
 -- Quotes: Public read access
-CREATE POLICY "Quotes are viewable by everyone" ON quotes
+CREATE POLICY IF NOT EXISTS "Quotes are viewable by everyone" ON quotes
     FOR SELECT USING (true);
 
 -- Profiles: Users can only see their own profile
-CREATE POLICY "Users can view own profile" ON profiles
+CREATE POLICY IF NOT EXISTS "Users can view own profile" ON profiles
     FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile" ON profiles
+CREATE POLICY IF NOT EXISTS "Users can update own profile" ON profiles
     FOR UPDATE USING (auth.uid() = id);
 
 -- Reading progress: Users can only access their own progress
-CREATE POLICY "Users can manage own reading progress" ON reading_progress
+CREATE POLICY IF NOT EXISTS "Users can manage own reading progress" ON reading_progress
     FOR ALL USING (auth.uid() = user_id);
 
 -- Bookmarks: Users can only access their own bookmarks
-CREATE POLICY "Users can manage own bookmarks" ON bookmarks
+CREATE POLICY IF NOT EXISTS "Users can manage own bookmarks" ON bookmarks
     FOR ALL USING (auth.uid() = user_id);
 
 -- Contact submissions: Authenticated users can create, admins can view all
-CREATE POLICY "Anyone can submit contact forms" ON contact_submissions
+CREATE POLICY IF NOT EXISTS "Anyone can submit contact forms" ON contact_submissions
     FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Admins can view all contact submissions" ON contact_submissions
+CREATE POLICY IF NOT EXISTS "Admins can view all contact submissions" ON contact_submissions
     FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Storage policies for book covers
-CREATE POLICY "Book covers are publicly accessible" ON storage.objects
+CREATE POLICY IF NOT EXISTS "Book covers are publicly accessible" ON storage.objects
     FOR SELECT USING (bucket_id = 'book-covers');
 
-CREATE POLICY "Authenticated users can upload book covers" ON storage.objects
+CREATE POLICY IF NOT EXISTS "Authenticated users can upload book covers" ON storage.objects
     FOR INSERT WITH CHECK (bucket_id = 'book-covers' AND auth.role() = 'authenticated');
 
 -- Storage policies for PDFs
-CREATE POLICY "PDFs are publicly accessible" ON storage.objects
+CREATE POLICY IF NOT EXISTS "PDFs are publicly accessible" ON storage.objects
     FOR SELECT USING (bucket_id = 'pdfs');
 
-CREATE POLICY "Authenticated users can upload PDFs" ON storage.objects
+CREATE POLICY IF NOT EXISTS "Authenticated users can upload PDFs" ON storage.objects
     FOR INSERT WITH CHECK (bucket_id = 'pdfs' AND auth.role() = 'authenticated');
 
 -- Create updated_at triggers
@@ -278,13 +282,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_books_updated_at BEFORE UPDATE ON books
+CREATE TRIGGER IF NOT EXISTS update_books_updated_at BEFORE UPDATE ON books
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
+CREATE TRIGGER IF NOT EXISTS update_profiles_updated_at BEFORE UPDATE ON profiles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_reading_progress_updated_at BEFORE UPDATE ON reading_progress
+CREATE TRIGGER IF NOT EXISTS update_reading_progress_updated_at BEFORE UPDATE ON reading_progress
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create function to handle user creation
@@ -292,7 +296,8 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.profiles (id, email, full_name)
-    VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+    VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name')
+    ON CONFLICT (id) DO NOTHING;
     RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -1,14 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import BookUpload from "../../components/BookUpload";
 import { Book } from "../../lib/types";
+import { supabase } from "../../lib/supabase";
 
 export default function UploadPage() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [recentUpload, setRecentUpload] = useState<Book | null>(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // Check if user is logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
 
   const handleUploadSuccess = (book: Book) => {
     setUploadSuccess(true);
@@ -19,6 +37,60 @@ export default function UploadPage() {
       setUploadSuccess(false);
     }, 5000);
   };
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="max-w-md mx-auto text-center bg-white rounded-xl shadow-lg p-8">
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🔒</span>
+            </div>
+            <h2 className="font-serif text-2xl text-primary mb-4">
+              Authentication Required
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You need to be logged in to upload books. Please sign in or create
+              an account to continue.
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/auth")}
+                className="w-full bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary-700 transition-colors font-medium"
+              >
+                Sign In / Sign Up
+              </button>
+              <button
+                onClick={() => router.push("/")}
+                className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              >
+                Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -31,8 +103,9 @@ export default function UploadPage() {
             Share Your Light
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Contribute to our growing library of spiritual wisdom by uploading books
-            that inspire and enlighten. Help spread the teachings of Omraam Mikhaël Aïvanhov.
+            Contribute to our growing library of spiritual wisdom by uploading
+            books that inspire and enlighten. Help spread the teachings of
+            Omraam Mikhaël Aïvanhov.
           </p>
         </div>
       </section>
@@ -111,8 +184,9 @@ export default function UploadPage() {
                 </h3>
                 <p className="text-sm text-accent-800 leading-relaxed">
                   By sharing spiritual books, you contribute to the collective
-                  awakening and help others on their path to enlightenment.
-                  Each book you upload becomes a beacon of light for seekers worldwide.
+                  awakening and help others on their path to enlightenment. Each
+                  book you upload becomes a beacon of light for seekers
+                  worldwide.
                 </p>
               </div>
 
@@ -139,7 +213,9 @@ export default function UploadPage() {
               <div className="max-w-md mx-auto">
                 <div className="bg-gradient-to-br from-primary-100 to-accent-100 rounded-lg p-6 text-center">
                   <div className="w-16 h-20 bg-white rounded shadow-md mx-auto mb-4 flex items-center justify-center">
-                    <span className="text-primary font-serif font-bold text-lg">V</span>
+                    <span className="text-primary font-serif font-bold text-lg">
+                      V
+                    </span>
                   </div>
                   <h4 className="font-serif text-lg font-semibold text-gray-900 mb-2">
                     {recentUpload.title}

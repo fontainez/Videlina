@@ -159,18 +159,23 @@ export default function BookUpload({
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
       <h2 className="font-serif text-2xl text-primary mb-6 text-center">
-        Upload New Book
+        📚 Upload New Book
       </h2>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border-2 border-green-400 rounded-lg p-4 mb-6 shadow-md">
           <div className="flex items-center">
-            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3">
-              <span className="text-white text-sm">✓</span>
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+              <span className="text-white font-bold">✓</span>
             </div>
-            <p className="text-green-800 font-medium">
-              Book uploaded successfully!
-            </p>
+            <div>
+              <p className="text-green-800 font-bold text-lg">
+                Book uploaded successfully!
+              </p>
+              <p className="text-green-700 text-sm mt-1">
+                Your spiritual contribution has been added to the library.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -412,12 +417,12 @@ export default function BookUpload({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-4 pt-4">
+        <div className="flex space-x-4 pt-6">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               disabled={loading}
             >
               Cancel
@@ -426,7 +431,7 @@ export default function BookUpload({
           <button
             type="submit"
             disabled={!isFormValid || loading}
-            className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+            className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium border-2 border-blue-500 shadow-lg"
           >
             {loading ? (
               <div className="flex items-center justify-center">
@@ -434,7 +439,7 @@ export default function BookUpload({
                 Uploading...
               </div>
             ) : (
-              "Upload Book"
+              "📤 Upload Book"
             )}
           </button>
         </div>
