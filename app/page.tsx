@@ -58,9 +58,13 @@ export default function Home() {
       <section className="hero-gradient py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <div className="mb-8">
-            {/* Placeholder for Omraam Mikhaël Aïvanhov photo */}
-            <div className="w-48 h-48 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-200 to-accent-200 flex items-center justify-center">
-              <span className="text-primary-700 font-serif text-lg">Photo</span>
+            {/* Omraam Mikhaël Aïvanhov photo */}
+            <div className="w-56 h-56 mx-auto mb-8 rounded-full overflow-hidden border-4 border-white shadow-2xl transform hover:scale-105 transition-transform duration-300">
+              <img
+                src="/images/OMA.jpg"
+                alt="Omraam Mikhaël Aïvanhov"
+                className="w-full h-full object-cover grayscale-0 hover:grayscale-0 transition-all duration-500"
+              />
             </div>
             <blockquote className="font-serif text-2xl md:text-3xl text-gray-800 italic mb-6 max-w-3xl mx-auto">
               "{currentQuote}"
