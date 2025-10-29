@@ -1,18 +1,31 @@
-import { supabase } from './supabase';
-import { Book, Category, Quote, User, ReadingProgress, Bookmark, ApiResponse, PaginatedResponse, SearchFilters } from './types';
+import { supabase } from "./supabase";
+import {
+  Book,
+  Category,
+  Quote,
+  User,
+  ReadingProgress,
+  Bookmark,
+  ApiResponse,
+  PaginatedResponse,
+  SearchFilters,
+} from "./types";
 
 // Books API
 export const booksApi = {
   // Get all books with pagination
-  async getBooks(page: number = 1, pageSize: number = 12): Promise<PaginatedResponse<Book>> {
+  async getBooks(
+    page: number = 1,
+    pageSize: number = 12,
+  ): Promise<PaginatedResponse<Book>> {
     try {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
       const { data, count, error } = await supabase
-        .from('books')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
+        .from("books")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
         .range(from, to);
 
       if (error) throw error;
@@ -25,7 +38,7 @@ export const booksApi = {
         total_pages: Math.ceil((count || 0) / pageSize),
       };
     } catch (error) {
-      console.error('Error fetching books:', error);
+      console.error("Error fetching books:", error);
       return {
         data: [],
         total: 0,
@@ -40,10 +53,10 @@ export const booksApi = {
   async getFeaturedBooks(limit: number = 6): Promise<ApiResponse<Book[]>> {
     try {
       const { data, error } = await supabase
-        .from('books')
-        .select('*')
-        .eq('is_featured', true)
-        .order('created_at', { ascending: false })
+        .from("books")
+        .select("*")
+        .eq("is_featured", true)
+        .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
@@ -54,10 +67,13 @@ export const booksApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching featured books:', error);
+      console.error("Error fetching featured books:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch featured books',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch featured books",
         success: false,
       };
     }
@@ -67,9 +83,9 @@ export const booksApi = {
   async getBookById(id: string): Promise<ApiResponse<Book>> {
     try {
       const { data, error } = await supabase
-        .from('books')
-        .select('*')
-        .eq('id', id)
+        .from("books")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
@@ -80,10 +96,10 @@ export const booksApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching book:', error);
+      console.error("Error fetching book:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch book',
+        error: error instanceof Error ? error.message : "Failed to fetch book",
         success: false,
       };
     }
@@ -92,35 +108,37 @@ export const booksApi = {
   // Search books
   async searchBooks(filters: SearchFilters): Promise<PaginatedResponse<Book>> {
     try {
-      let query = supabase
-        .from('books')
-        .select('*', { count: 'exact' });
+      let query = supabase.from("books").select("*", { count: "exact" });
 
       // Apply search query
       if (filters.query) {
-        query = query.or(`title.ilike.%${filters.query}%,description.ilike.%${filters.query}%,author.ilike.%${filters.query}%`);
+        query = query.or(
+          `title.ilike.%${filters.query}%,description.ilike.%${filters.query}%,author.ilike.%${filters.query}%`,
+        );
       }
 
       // Apply category filter
-      if (filters.category && filters.category !== 'All') {
-        query = query.eq('category', filters.category);
+      if (filters.category && filters.category !== "All") {
+        query = query.eq("category", filters.category);
       }
 
       // Apply year range filter
       if (filters.year_from) {
-        query = query.gte('year', filters.year_from);
+        query = query.gte("year", filters.year_from);
       }
       if (filters.year_to) {
-        query = query.lte('year', filters.year_to);
+        query = query.lte("year", filters.year_to);
       }
 
       // Apply language filter
       if (filters.language) {
-        query = query.eq('language', filters.language);
+        query = query.eq("language", filters.language);
       }
 
       // Apply sorting
-      query = query.order(filters.sort_by, { ascending: filters.sort_order === 'asc' });
+      query = query.order(filters.sort_by, {
+        ascending: filters.sort_order === "asc",
+      });
 
       const { data, count, error } = await query;
 
@@ -134,7 +152,7 @@ export const booksApi = {
         total_pages: 1,
       };
     } catch (error) {
-      console.error('Error searching books:', error);
+      console.error("Error searching books:", error);
       return {
         data: [],
         total: 0,
@@ -146,13 +164,16 @@ export const booksApi = {
   },
 
   // Get books by category
-  async getBooksByCategory(category: string, limit: number = 12): Promise<ApiResponse<Book[]>> {
+  async getBooksByCategory(
+    category: string,
+    limit: number = 12,
+  ): Promise<ApiResponse<Book[]>> {
     try {
       const { data, error } = await supabase
-        .from('books')
-        .select('*')
-        .eq('category', category)
-        .order('created_at', { ascending: false })
+        .from("books")
+        .select("*")
+        .eq("category", category)
+        .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
@@ -163,10 +184,87 @@ export const booksApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching books by category:', error);
+      console.error("Error fetching books by category:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch books by category',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch books by category",
+        success: false,
+      };
+    }
+  },
+
+  // Upload book with file
+  async uploadBook(
+    bookData: Omit<Book, "id" | "created_at" | "updated_at">,
+    coverFile?: File,
+    pdfFile?: File,
+  ): Promise<ApiResponse<Book>> {
+    try {
+      let coverUrl = bookData.cover_url;
+      let pdfUrl = bookData.pdf_url;
+
+      // Upload cover image if provided
+      if (coverFile) {
+        const coverExt = coverFile.name.split(".").pop();
+        const coverFileName = `cover_${Date.now()}.${coverExt}`;
+
+        const { data: coverData, error: coverError } = await supabase.storage
+          .from("book-covers")
+          .upload(coverFileName, coverFile);
+
+        if (coverError) throw coverError;
+
+        const { data: coverUrlData } = supabase.storage
+          .from("book-covers")
+          .getPublicUrl(coverFileName);
+
+        coverUrl = coverUrlData.publicUrl;
+      }
+
+      // Upload PDF file if provided
+      if (pdfFile) {
+        const pdfExt = pdfFile.name.split(".").pop();
+        const pdfFileName = `book_${Date.now()}.${pdfExt}`;
+
+        const { data: pdfData, error: pdfError } = await supabase.storage
+          .from("pdfs")
+          .upload(pdfFileName, pdfFile);
+
+        if (pdfError) throw pdfError;
+
+        const { data: pdfUrlData } = supabase.storage
+          .from("pdfs")
+          .getPublicUrl(pdfFileName);
+
+        pdfUrl = pdfUrlData.publicUrl;
+      }
+
+      // Create book record in database
+      const { data, error } = await supabase
+        .from("books")
+        .insert({
+          ...bookData,
+          cover_url: coverUrl,
+          pdf_url: pdfUrl,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return {
+        data,
+        error: null,
+        success: true,
+      };
+    } catch (error) {
+      console.error("Error uploading book:", error);
+      return {
+        data: null,
+        error: error instanceof Error ? error.message : "Failed to upload book",
         success: false,
       };
     }
@@ -179,9 +277,9 @@ export const categoriesApi = {
   async getCategories(): Promise<ApiResponse<Category[]>> {
     try {
       const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
+        .from("categories")
+        .select("*")
+        .order("name");
 
       if (error) throw error;
 
@@ -191,10 +289,11 @@ export const categoriesApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch categories',
+        error:
+          error instanceof Error ? error.message : "Failed to fetch categories",
         success: false,
       };
     }
@@ -207,10 +306,10 @@ export const quotesApi = {
   async getDailyQuote(): Promise<ApiResponse<Quote>> {
     try {
       const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .eq('is_daily', true)
-        .order('created_at', { ascending: false })
+        .from("quotes")
+        .select("*")
+        .eq("is_daily", true)
+        .order("created_at", { ascending: false })
         .limit(1)
         .single();
 
@@ -222,10 +321,13 @@ export const quotesApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching daily quote:', error);
+      console.error("Error fetching daily quote:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch daily quote',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch daily quote",
         success: false,
       };
     }
@@ -235,9 +337,9 @@ export const quotesApi = {
   async getRandomQuote(): Promise<ApiResponse<Quote>> {
     try {
       const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .order('random()')
+        .from("quotes")
+        .select("*")
+        .order("random()")
         .limit(1)
         .single();
 
@@ -249,10 +351,13 @@ export const quotesApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching random quote:', error);
+      console.error("Error fetching random quote:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch random quote',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch random quote",
         success: false,
       };
     }
@@ -262,10 +367,10 @@ export const quotesApi = {
   async getQuotesByBook(bookId: string): Promise<ApiResponse<Quote[]>> {
     try {
       const { data, error } = await supabase
-        .from('quotes')
-        .select('*')
-        .eq('book_id', bookId)
-        .order('created_at', { ascending: false });
+        .from("quotes")
+        .select("*")
+        .eq("book_id", bookId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -275,10 +380,13 @@ export const quotesApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching quotes by book:', error);
+      console.error("Error fetching quotes by book:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch quotes by book',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch quotes by book",
         success: false,
       };
     }
@@ -288,15 +396,18 @@ export const quotesApi = {
 // User progress API (requires authentication)
 export const progressApi = {
   // Get reading progress for a user
-  async getReadingProgress(userId: string, bookId?: string): Promise<ApiResponse<ReadingProgress[]>> {
+  async getReadingProgress(
+    userId: string,
+    bookId?: string,
+  ): Promise<ApiResponse<ReadingProgress[]>> {
     try {
       let query = supabase
-        .from('reading_progress')
-        .select('*')
-        .eq('user_id', userId);
+        .from("reading_progress")
+        .select("*")
+        .eq("user_id", userId);
 
       if (bookId) {
-        query = query.eq('book_id', bookId);
+        query = query.eq("book_id", bookId);
       }
 
       const { data, error } = await query;
@@ -309,10 +420,13 @@ export const progressApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching reading progress:', error);
+      console.error("Error fetching reading progress:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch reading progress',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch reading progress",
         success: false,
       };
     }
@@ -323,13 +437,13 @@ export const progressApi = {
     userId: string,
     bookId: string,
     currentPage: number,
-    totalPages: number
+    totalPages: number,
   ): Promise<ApiResponse<ReadingProgress>> {
     try {
       const percentageComplete = Math.round((currentPage / totalPages) * 100);
 
       const { data, error } = await supabase
-        .from('reading_progress')
+        .from("reading_progress")
         .upsert({
           user_id: userId,
           book_id: bookId,
@@ -349,10 +463,13 @@ export const progressApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error updating reading progress:', error);
+      console.error("Error updating reading progress:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to update reading progress',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update reading progress",
         success: false,
       };
     }
@@ -362,18 +479,20 @@ export const progressApi = {
 // Bookmarks API (requires authentication)
 export const bookmarksApi = {
   // Get bookmarks for a user
-  async getBookmarks(userId: string, bookId?: string): Promise<ApiResponse<Bookmark[]>> {
+  async getBookmarks(
+    userId: string,
+    bookId?: string,
+  ): Promise<ApiResponse<Bookmark[]>> {
     try {
-      let query = supabase
-        .from('bookmarks')
-        .select('*')
-        .eq('user_id', userId);
+      let query = supabase.from("bookmarks").select("*").eq("user_id", userId);
 
       if (bookId) {
-        query = query.eq('book_id', bookId);
+        query = query.eq("book_id", bookId);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query.order("created_at", {
+        ascending: false,
+      });
 
       if (error) throw error;
 
@@ -383,10 +502,11 @@ export const bookmarksApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error fetching bookmarks:', error);
+      console.error("Error fetching bookmarks:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to fetch bookmarks',
+        error:
+          error instanceof Error ? error.message : "Failed to fetch bookmarks",
         success: false,
       };
     }
@@ -397,11 +517,11 @@ export const bookmarksApi = {
     userId: string,
     bookId: string,
     pageNumber: number,
-    note?: string
+    note?: string,
   ): Promise<ApiResponse<Bookmark>> {
     try {
       const { data, error } = await supabase
-        .from('bookmarks')
+        .from("bookmarks")
         .insert({
           user_id: userId,
           book_id: bookId,
@@ -419,10 +539,11 @@ export const bookmarksApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error creating bookmark:', error);
+      console.error("Error creating bookmark:", error);
       return {
         data: null,
-        error: error instanceof Error ? error.message : 'Failed to create bookmark',
+        error:
+          error instanceof Error ? error.message : "Failed to create bookmark",
         success: false,
       };
     }
@@ -432,9 +553,9 @@ export const bookmarksApi = {
   async deleteBookmark(bookmarkId: string): Promise<ApiResponse<boolean>> {
     try {
       const { error } = await supabase
-        .from('bookmarks')
+        .from("bookmarks")
         .delete()
-        .eq('id', bookmarkId);
+        .eq("id", bookmarkId);
 
       if (error) throw error;
 
@@ -444,10 +565,11 @@ export const bookmarksApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error deleting bookmark:', error);
+      console.error("Error deleting bookmark:", error);
       return {
         data: false,
-        error: error instanceof Error ? error.message : 'Failed to delete bookmark',
+        error:
+          error instanceof Error ? error.message : "Failed to delete bookmark",
         success: false,
       };
     }
@@ -471,7 +593,7 @@ export const contactApi = {
       // 3. Integrate with a service like SendGrid
 
       // For now, we'll simulate success
-      console.log('Contact form submitted:', formData);
+      console.log("Contact form submitted:", formData);
 
       return {
         data: true,
@@ -479,10 +601,13 @@ export const contactApi = {
         success: true,
       };
     } catch (error) {
-      console.error('Error submitting contact form:', error);
+      console.error("Error submitting contact form:", error);
       return {
         data: false,
-        error: error instanceof Error ? error.message : 'Failed to submit contact form',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit contact form",
         success: false,
       };
     }

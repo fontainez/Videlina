@@ -1,16 +1,17 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Library', href: '/library' },
-    { name: 'About', href: '/about' },
-  ]
+    { name: "Home", href: "/" },
+    { name: "Library", href: "/library" },
+    { name: "Upload", href: "/upload" },
+    { name: "About", href: "/about" },
+  ];
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-100">
@@ -34,8 +35,8 @@ export default function Header() {
                 href={item.href}
                 className={`font-serif text-lg font-medium transition-colors duration-200 ${
                   pathname === item.href
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-600 hover:text-primary'
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-gray-600 hover:text-primary"
                 }`}
               >
                 {item.name}
@@ -46,13 +47,23 @@ export default function Header() {
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button className="text-gray-600 hover:text-primary">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </button>
           </div>
         </div>
       </div>
     </header>
-  )
+  );
 }

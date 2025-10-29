@@ -202,6 +202,11 @@ CREATE INDEX idx_quotes_daily ON quotes(is_daily);
 CREATE INDEX idx_reading_progress_user ON reading_progress(user_id);
 CREATE INDEX idx_bookmarks_user ON bookmarks(user_id);
 
+-- Storage setup for file uploads
+INSERT INTO storage.buckets (id, name, public) VALUES
+  ('book-covers', 'book-covers', true),
+  ('pdfs', 'pdfs', true);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
@@ -249,6 +254,20 @@ CREATE POLICY "Anyone can submit contact forms" ON contact_submissions
 
 CREATE POLICY "Admins can view all contact submissions" ON contact_submissions
     FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Storage policies for book covers
+CREATE POLICY "Book covers are publicly accessible" ON storage.objects
+    FOR SELECT USING (bucket_id = 'book-covers');
+
+CREATE POLICY "Authenticated users can upload book covers" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'book-covers' AND auth.role() = 'authenticated');
+
+-- Storage policies for PDFs
+CREATE POLICY "PDFs are publicly accessible" ON storage.objects
+    FOR SELECT USING (bucket_id = 'pdfs');
+
+CREATE POLICY "Authenticated users can upload PDFs" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'pdfs' AND auth.role() = 'authenticated');
 
 -- Create updated_at triggers
 CREATE OR REPLACE FUNCTION update_updated_at_column()
