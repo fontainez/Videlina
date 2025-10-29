@@ -1,31 +1,56 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import { useState, useEffect } from "react";
+import { quotesApi } from "../lib/api";
+import { Quote } from "../lib/types";
 
-// Mock data for daily inspiration quotes
-const dailyQuotes = [
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+
+// Fallback quotes in case Supabase is not available
+const fallbackQuotes = [
   "Let light, peace, and wisdom guide your every thought.",
   "The sun is the image of the divine light that illuminates the world.",
   "True spirituality is not about escaping the world, but about transforming it.",
   "Love is the key that opens all doors.",
   "The mind is the gardener who cultivates the garden of the soul.",
-]
+];
 
 export default function Home() {
-  const [currentQuote, setCurrentQuote] = useState(dailyQuotes[0])
+  const [currentQuote, setCurrentQuote] = useState(fallbackQuotes[0]);
+  const [quoteSource, setQuoteSource] = useState("Omraam Mikhaël Aïvanhov");
+  const [loadingQuote, setLoadingQuote] = useState(false);
 
-  const getRandomQuote = () => {
-    const randomIndex = Math.floor(Math.random() * dailyQuotes.length)
-    setCurrentQuote(dailyQuotes[randomIndex])
-  }
+  const getRandomQuote = async () => {
+    setLoadingQuote(true);
+    try {
+      const response = await quotesApi.getRandomQuote();
+      if (response.success && response.data) {
+        setCurrentQuote(response.data.text);
+        setQuoteSource(response.data.source || "Omraam Mikhaël Aïvanhov");
+      } else {
+        // Fallback to local quotes if Supabase fails
+        const randomIndex = Math.floor(Math.random() * fallbackQuotes.length);
+        setCurrentQuote(fallbackQuotes[randomIndex]);
+        setQuoteSource("Omraam Mikhaël Aïvanhov");
+      }
+    } catch (error) {
+      console.error("Error fetching quote:", error);
+      // Fallback to local quotes
+      const randomIndex = Math.floor(Math.random() * fallbackQuotes.length);
+      setCurrentQuote(fallbackQuotes[randomIndex]);
+      setQuoteSource("Omraam Mikhaël Aïvanhov");
+    } finally {
+      setLoadingQuote(false);
+    }
+  };
 
-  // Set a random quote on component mount
+  // Load a random quote on component mount
   useEffect(() => {
-    getRandomQuote()
-  }, [])
+    getRandomQuote();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -42,7 +67,7 @@ export default function Home() {
             <blockquote className="font-serif text-2xl md:text-3xl text-gray-800 italic mb-6 max-w-3xl mx-auto">
               "{currentQuote}"
             </blockquote>
-            <p className="text-primary-600 font-medium">- Omraam Mikhaël Aïvanhov</p>
+            <p className="text-primary-600 font-medium">- {quoteSource}</p>
           </div>
         </div>
       </section>
@@ -55,27 +80,28 @@ export default function Home() {
           </h2>
           <div className="space-y-6 text-gray-700 text-lg leading-relaxed">
             <p>
-              Omraam Mikhaël Aïvanhov (1900-1986) was a Bulgarian spiritual teacher and philosopher
-              who dedicated his life to the study and teaching of spiritual science. His work
-              encompasses a vast range of topics including meditation, nutrition, family life,
-              and the spiritual significance of nature.
+              Omraam Mikhaël Aïvanhov (1900-1986) was a Bulgarian spiritual
+              teacher and philosopher who dedicated his life to the study and
+              teaching of spiritual science. His work encompasses a vast range
+              of topics including meditation, nutrition, family life, and the
+              spiritual significance of nature.
             </p>
             <p>
-              Through his thousands of lectures, Aïvanhov presented a comprehensive spiritual
-              teaching that emphasizes the importance of self-mastery, love, and the conscious
-              development of one's inner being. His teachings are practical and aim to help
-              individuals transform their daily lives through spiritual principles.
+              Through his thousands of lectures, Aïvanhov presented a
+              comprehensive spiritual teaching that emphasizes the importance of
+              self-mastery, love, and the conscious development of one's inner
+              being. His teachings are practical and aim to help individuals
+              transform their daily lives through spiritual principles.
             </p>
             <p>
-              Aïvanhov's work continues to inspire seekers around the world, offering profound
-              insights into the nature of consciousness, the purpose of human existence, and
-              the path to spiritual enlightenment.
+              Aïvanhov's work continues to inspire seekers around the world,
+              offering profound insights into the nature of consciousness, the
+              purpose of human existence, and the path to spiritual
+              enlightenment.
             </p>
           </div>
           <div className="text-center mt-8">
-            <button className="btn-primary">
-              Read Full Biography
-            </button>
+            <button className="btn-primary">Read Full Biography</button>
           </div>
         </div>
       </section>
@@ -87,10 +113,13 @@ export default function Home() {
             Explore the Library of Light
           </h2>
           <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-            Discover the profound wisdom and spiritual teachings of Omraam Mikhaël Aïvanhov
-            through our comprehensive digital library.
+            Discover the profound wisdom and spiritual teachings of Omraam
+            Mikhaël Aïvanhov through our comprehensive digital library.
           </p>
-          <Link href="/library" className="btn-secondary inline-flex items-center text-2xl">
+          <Link
+            href="/library"
+            className="btn-secondary inline-flex items-center text-2xl"
+          >
             📚 Enter the Library
           </Link>
 
@@ -117,21 +146,33 @@ export default function Home() {
             Daily Inspiration
           </h2>
           <div className="card p-8 max-w-2xl mx-auto text-center">
-            <blockquote className="font-serif text-xl text-gray-700 italic mb-6">
-              "{currentQuote}"
-            </blockquote>
-            <p className="text-primary-600 font-medium mb-6">- Omraam Mikhaël Aïvanhov</p>
-            <button
-              onClick={getRandomQuote}
-              className="btn-primary"
-            >
-              New Quote
-            </button>
+            {loadingQuote ? (
+              <div className="py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                <p className="text-gray-600">Loading inspiration...</p>
+              </div>
+            ) : (
+              <>
+                <blockquote className="font-serif text-xl text-gray-700 italic mb-6">
+                  "{currentQuote}"
+                </blockquote>
+                <p className="text-primary-600 font-medium mb-6">
+                  - {quoteSource}
+                </p>
+                <button
+                  onClick={getRandomQuote}
+                  className="btn-primary"
+                  disabled={loadingQuote}
+                >
+                  {loadingQuote ? "Loading..." : "New Quote"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </section>
 
       <Footer />
     </div>
-  )
+  );
 }
