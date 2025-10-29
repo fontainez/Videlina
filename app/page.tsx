@@ -3,9 +3,7 @@
 import { useState, useEffect } from "react";
 import { quotesApi } from "../lib/api";
 import { Quote } from "../lib/types";
-
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
